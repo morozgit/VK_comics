@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv, find_dotenv
+import random
 
 
 def download_picture(picture):
@@ -11,15 +12,48 @@ def download_picture(picture):
         file.write(response.content)
 
 
+def get_address_server(vk_access_token):
+    vk_groups_address_server_url = 'https://api.vk.com/method/photos.getWallUploadServer'
+    vk_groups_address_server_payload = {
+        'access_token': vk_access_token,
+        'group_id': 221841479,
+        'v': '5.131',
+    }
+    vk_groups_address_server_response = requests.get(
+        vk_groups_address_server_url,
+        params=vk_groups_address_server_payload
+        )
+    vk_groups_address_server_response.raise_for_status()
+    vk_groups_address_server = vk_groups_address_server_response.json()
+    return vk_groups_address_server
+
+def upload_picture_to_server(vk_server_url):
+    with open('Comics.png', 'rb') as file:
+        # url = 'https://pu.vk.com/c842229/ss2120/upload.php?act=do_add&mid=141246322&aid=-14&gid=221841479&hash=524a084e53e41ed076465bb760958a9d&rhash=f5f90a684d4781a4eaad7adda9f6678e&swfupload=1&api=1&wallphoto=1'
+        url_for_upload = vk_server_url['response']['upload_url']
+        files = {
+            'photo': file,
+        }
+        response = requests.post(url_for_upload, files=files)
+    response.raise_for_status()
+    comics_in_server = response.json()['photo']
+    hash_in_server = response.json()['hash']
+        # print('hash_in_server', hash_in_server)
+        # print('comics_in_server', comics_in_server)
+        # print(response.json())
+
+
+
 def main():
     #Скачивание комикса
-    url = 'https://xkcd.com/info.0.json'
+    total_comics = 2809
+    url = 'https://xkcd.com/{}/info.0.json'.format(random.randrange(0,total_comics))
     response = requests.get(url)
     response.raise_for_status()
     comics_response = response.json()
     comics_url = comics_response['img']
     comics_coment = comics_response['alt']
-    # print(comics_coment)
+    print(comics_response)
     download_picture(comics_url)
 
     #Получение ссылки ACCESS_TOKEN
@@ -53,31 +87,9 @@ def main():
     vk_groups = vk_groups_response.json()
     # print(vk_groups)
 
-    #Получение адреса сервера для отправки картинки
-    vk_groups_address_server_url = 'https://api.vk.com/method/photos.getWallUploadServer'
-    vk_groups_address_server_payload = {
-        'access_token': vk_access_token,
-        'group_id': 221841479,
-        'v': '5.131',
-    }
-    vk_groups_address_server_response = requests.get(vk_groups_address_server_url, params=vk_groups_address_server_payload)
-    vk_groups_address_server_response.raise_for_status()
-    vk_groups_address_server = vk_groups_address_server_response.json()
-    # print(vk_groups_address_server)
+    vk_server_url = get_address_server(vk_access_token)
 
-    #Загрузка картинки на сервер
-    with open('Comics.png', 'rb') as file:
-        url = 'https://pu.vk.com/c842229/ss2120/upload.php?act=do_add&mid=141246322&aid=-14&gid=221841479&hash=524a084e53e41ed076465bb760958a9d&rhash=f5f90a684d4781a4eaad7adda9f6678e&swfupload=1&api=1&wallphoto=1'
-        files = {
-            'photo': file,
-        }
-        response = requests.post(url, files=files)
-    response.raise_for_status()
-    comics_in_server = response.json()['photo']
-    hash_in_server = response.json()['hash']
-        # print('hash_in_server', hash_in_server)
-        # print('comics_in_server', comics_in_server)
-        # print(response.json())
+    
 
     # Сохранение картинки на стене сообщества
     # vk_group_token = os.environ.get('GROUP_TOKEN')
@@ -108,7 +120,7 @@ def main():
     }
     vk_publish_photo_response = requests.post(vk_publish_photo_url, params=vk_publish_photo_payload)
     vk_publish_photo_response.raise_for_status()
-    print(vk_publish_photo_response.json())
+    # print(vk_publish_photo_response.json())
 
 
 if __name__ == '__main__':
