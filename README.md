@@ -26,17 +26,17 @@ brew install python3
 
 #### Запись App_ID
 ```python
-echo App_ID=ваш ID > .env
+echo VK_App_ID=ваш ID > .env
 ```
 
 #### Запись ключа VK
 ```python
-echo ACCESS_TOKEN=ваш ключ >> .env
+echo VK_ACCESS_TOKEN=ваш ключ >> .env
 ```
 
 #### Запись ключа ID группы
 ```python
-echo GROUP_ID=ваш ID группы >> .env
+echo VK_GROUP_ID=ваш ID группы >> .env
 ```
 
 ### Установка библиотек
