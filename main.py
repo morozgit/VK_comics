@@ -1,21 +1,15 @@
 import os
 import random
-import sys
 
 import requests
 from dotenv import find_dotenv, load_dotenv
 
 
 def handling_error(answer):
-    try:
-        if answer['error']:
-            raise requests.HTTPError
-    except requests.HTTPError:
+    if answer.get('error'):
         error_msg = answer['error']['error_msg']
         error_code = answer['error']['error_code']
-        print('Код ошибки:', error_msg)
-        print('Текст ошибки:', error_code)
-        sys.exit()
+        raise requests.HTTPError('Код ошибки: {0}, Текст ошибки: {1}'.format(error_code, error_msg))
 
 
 def download_picture(picture):
@@ -49,10 +43,10 @@ def get_upload_address(vk_access_token, vk_group_id):
         url,
         params=payload
         )
-    vk_answer = response.json()
-    handling_error(vk_answer)
+    upload_url = response.json()
+    handling_error(upload_url)
     response.raise_for_status()
-    return vk_answer
+    return upload_url
 
 
 def upload_picture_to_server(upload_url):
@@ -122,14 +116,16 @@ def main():
         vk_hash = vk_answer_upload['hash']
         vk_server = vk_answer_upload['server']
         vk_answer_post = save_picture_to_wall(vk_access_token,
-                                                    vk_group_id,
-                                                    vk_comics,
-                                                    vk_hash,
-                                                    vk_server)
+                                              vk_group_id,
+                                              vk_comics,
+                                              vk_hash,
+                                              vk_server)
         photo_id = vk_answer_post['response'][0]['id']
         owner_id = vk_answer_post['response'][0]['owner_id']
         publish_picture_to_wall(vk_access_token, vk_group_id, comics_comment,
                                 owner_id, photo_id)
+    except requests.HTTPError as error:
+        print(error)
     finally:
         os.remove('Comics.png')
 
