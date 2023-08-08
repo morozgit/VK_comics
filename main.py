@@ -43,9 +43,10 @@ def get_upload_address(vk_access_token, vk_group_id):
         url,
         params=payload
         )
-    upload_url = response.json()
-    handling_error(upload_url)
+    answer = response.json()
+    handling_error(answer)
     response.raise_for_status()
+    upload_url = answer['response']['upload_url']
     return upload_url
 
 
@@ -108,10 +109,8 @@ def main():
     vk_access_token = os.environ["VK_ACCESS_TOKEN"]
     vk_group_id = os.environ["VK_GROUP_ID"]
     try:
-        comics_comment = download_random_comics()
-        vk_server_url = get_upload_address(vk_access_token, vk_group_id)
-        upload_url = vk_server_url['response']['upload_url']
-        vk_answer_upload = upload_picture_to_server(upload_url)
+        comics_comment = download_random_comics()        
+        vk_answer_upload = upload_picture_to_server(get_upload_address(vk_access_token, vk_group_id))
         vk_comics = vk_answer_upload['photo']
         vk_hash = vk_answer_upload['hash']
         vk_server = vk_answer_upload['server']
